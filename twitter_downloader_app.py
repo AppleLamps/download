@@ -12,8 +12,9 @@ DOWNLOAD_FOLDER.mkdir(exist_ok=True)
 st.set_page_config(page_title="Twitter Video Downloader", layout="centered")
 st.title("Twitter Video Downloader")
 
-# Inform the user about limitations and how files are handled
-st.markdown("This downloader works for public Twitter videos only. Files are saved temporarily on the server or local machine, and you can download them to your device using the buttons below.")
+# Inform the user about limitations, file handling, and potential deployment issues
+st.markdown("This downloader works for public Twitter videos only. Files are saved temporarily on the server, and you can download them to your device using the buttons below.")
+st.markdown("Note: In deployed environments, additional dependencies like ffmpeg may be required for yt-dlp to work properly.")
 st.markdown("Paste one or more Twitter video URLs (one per line):")
 tweet_input = st.text_area("Tweet URLs", height=200, placeholder="https://twitter.com/username/status/123...\nhttps://twitter.com/...")
 
@@ -27,10 +28,15 @@ if st.button("Download"):
     if not tweet_urls:
         st.warning("Please enter at least one valid Twitter video URL.")
     else:
-        # Check if yt-dlp is installed before proceeding
+        # Check if yt-dlp is installed
         if shutil.which("yt-dlp") is None:
-            st.error("yt-dlp is not found. Please install it using 'pip install yt-dlp' or your package manager.")
-            st.stop()  # Halt execution if yt-dlp is missing
+            st.error("yt-dlp is not found. Please ensure it is installed (e.g., via pip install yt-dlp).")
+            st.stop()
+        
+        # Check if ffmpeg is installed, as yt-dlp often requires it
+        if shutil.which("ffmpeg") is None:
+            st.error("ffmpeg is not found. yt-dlp may fail without it. Install ffmpeg on your system or ensure it's available in the deployment environment.")
+            st.stop()  # Halt if ffmpeg is missing, as downloads will likely fail
         
         st.success(f"Starting download for {len(tweet_urls)} video(s)...")
         successful_downloads = []  # Temp list for this run
@@ -76,4 +82,4 @@ else:
     st.session_state["download_triggered"] = True  # Track if download was attempted
 
 # Note: Files are stored in the 'downloads' folder on the server or local machine.
-# In a deployed app, these files may be temporary and could be cleaned up periodically.
+# In Streamlit Cloud, these files are temporary and may be cleaned up periodically.
